@@ -1,0 +1,21 @@
+{
+  "name": "Masha",
+  "totalDevices": 5,
+  "devices": [
+    {
+      "platform": "Android",
+      "models": [
+        "Google Pixel 8",
+        "Samsung Galaxy S23"
+      ]
+    },
+    {
+      "platform": "iOS",
+      "models": [
+        "iPhone 15 Pro",
+        "iPhone XS",
+        "iPhone 13"
+      ]
+    }
+  ]
+}
