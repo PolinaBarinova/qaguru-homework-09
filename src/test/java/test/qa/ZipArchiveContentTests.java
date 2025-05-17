@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class ZipArchiveContentTests {
     private ClassLoader cl = ZipArchiveContentTests.class.getClassLoader();
@@ -20,11 +22,16 @@ public class ZipArchiveContentTests {
     @Test
     @DisplayName("Вывести названия файлов из архива")
     void zipFileParsingTest() throws Exception {
-        try (ZipInputStream zis = new ZipInputStream(cl.getResourceAsStream("arhiv.zip")
-        )) {
-            ZipEntry entry;
+        InputStream is = cl.getResourceAsStream("arhiv.zip");
+        assertNotNull(is, "Архив не найден");
+
+        try (ZipInputStream zis = new ZipInputStream(is)) {
+            ZipEntry entry = zis.getNextEntry();
+            assertNotNull(entry, "Архив пустой");
+            System.out.println(entry.getName());
+
             while ((entry = zis.getNextEntry()) != null) {
-                System.out.print(entry.getName());
+                System.out.println(entry.getName());
             }
         }
     }
