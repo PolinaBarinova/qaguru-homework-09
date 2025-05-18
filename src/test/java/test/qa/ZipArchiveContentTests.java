@@ -6,6 +6,8 @@ import com.opencsv.CSVReader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -19,10 +21,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ZipArchiveContentTests {
     private ClassLoader cl = ZipArchiveContentTests.class.getClassLoader();
 
-    @Test
+    @ValueSource(strings = {
+            "arhiv.zip", "empty.zip", "test.zip"
+    })
+    @ParameterizedTest(name = "Вывести названия файлов из архива {0}")
     @DisplayName("Вывести названия файлов из архива")
-    void zipFileParsingTest() throws Exception {
-        InputStream is = cl.getResourceAsStream("arhiv.zip");
+    void zipFileParsingTest(String arhivName) throws Exception {
+        InputStream is = cl.getResourceAsStream(arhivName);
         assertNotNull(is, "Архив не найден");
 
         try (ZipInputStream zis = new ZipInputStream(is)) {
@@ -36,63 +41,80 @@ public class ZipArchiveContentTests {
         }
     }
 
-    @Test
+    @ValueSource(strings = {
+            "arhiv.zip", "empty.zip", "test.zip"
+    })
+    @ParameterizedTest(name = "Открыть файл pdf из архива {0}")
     @DisplayName("Открыть файл pdf из архива")
-    public void pdfFileParsingTest() throws Exception {
+    public void pdfFileParsingTest(String arhivName) throws Exception {
 
-        try (InputStream inputStream = cl.getResourceAsStream("arhiv.zip")) {
-            assert inputStream != null;
-            try (ZipInputStream zis = new ZipInputStream(inputStream)) {
-                ZipEntry zipEntry;
-                while ((zipEntry = zis.getNextEntry()) != null) {
-                    if (zipEntry.getName().endsWith(".pdf")) {
-                        PDF pdf = new PDF(zis);
-                        Assertions.assertEquals(null, pdf.creator);
-                    }
+        InputStream is = cl.getResourceAsStream(arhivName);
+        assertNotNull(is, "Архив не найден");
+
+        boolean foundPdf = false;
+        try (ZipInputStream zis = new ZipInputStream(is)) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.getName().endsWith(".pdf")) {
+                    foundPdf = true;
+                    PDF pdf = new PDF(zis);
+                    assertEquals(null, pdf.creator);
                 }
             }
         }
+        assertTrue(foundPdf, "PDF-файл не найден в архиве");
     }
 
-    @Test
+    @ValueSource(strings = {
+            "arhiv.zip", "empty.zip", "test.zip"
+    })
+    @ParameterizedTest(name = "Открыть файл xls из архива {0}")
     @DisplayName("Открыть файл xls из архива")
-    public void xlsFileParsingTest() throws Exception {
+    public void xlsFileParsingTest(String arhivName) throws Exception {
+        InputStream is = cl.getResourceAsStream(arhivName);
+        assertNotNull(is, "Архив не найден");
 
-        try (InputStream inputStream = cl.getResourceAsStream("arhiv.zip")) {
-            assert inputStream != null;
-            try (ZipInputStream zis = new ZipInputStream(inputStream)) {
-                ZipEntry zipEntry;
-                while ((zipEntry = zis.getNextEntry()) != null) {
-                    if (zipEntry.getName().endsWith(".xls")) {
-                        XLS xls = new XLS(zis);
-                        String value = xls.excel.getSheetAt(0).getRow(2).getCell(2).getStringCellValue();
-                        Assertions.assertTrue(value.contains("Боже, помоги мне это доделать!"));
-                    }
+        boolean foundXls = false;
+        try (ZipInputStream zis = new ZipInputStream(is)) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.getName().endsWith(".xls")) {
+                    foundXls = true;
+                    XLS xls = new XLS(zis);
+                    String value = xls.excel.getSheetAt(0).getRow(2).getCell(2).getStringCellValue();
+                    assertTrue(value.contains("Боже, помоги мне это доделать!"));
                 }
             }
         }
+        assertTrue(foundXls, "XLS-файл не найден в архиве");
     }
 
-    @Test
+    @ValueSource(strings = {
+            "arhiv.zip", "empty.zip", "test.zip"
+    })
+    @ParameterizedTest(name = "Открыть файл csv из архива {0}")
     @DisplayName("Открыть файл csv из архива")
-    public void csvFileParsingTest() throws Exception {
+    public void csvFileParsingTest(String arhivName) throws Exception {
+        InputStream is = cl.getResourceAsStream(arhivName);
+        assertNotNull(is, "Архив не найден");
 
-        try (InputStream inputStream = cl.getResourceAsStream("arhiv.zip")) {
-            assert inputStream != null;
-            try (ZipInputStream zis = new ZipInputStream(inputStream)) {
-                ZipEntry zipEntry;
-                while ((zipEntry = zis.getNextEntry()) != null) {
-                    if (zipEntry.getName().endsWith(".csv")) {
-                        CSVReader csv = new CSVReader(new InputStreamReader(zis));
-                        List<String[]> data = csv.readAll();
-                        Assertions.assertEquals(2, data.size());
-                        Assertions.assertArrayEquals(new String[]{"Вася Иванов", "Москва"}, data.get(0));
-                        Assertions.assertArrayEquals(new String[]{"Петя Сидоров", "Ростов"}, data.get(1));
-                    }
+        boolean foundCsv = false;
+        try (ZipInputStream zis = new ZipInputStream(is)) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.getName().endsWith(".csv")) {
+                    foundCsv = true;
+                    CSVReader csv = new CSVReader(new InputStreamReader(zis));
+                    List<String[]> data = csv.readAll();
+                    assertEquals(2, data.size(), "Неверное количество строк");
+                    assertArrayEquals(new String[]{"Вася Иванов", "Москва"}, data.get(0));
+                    assertArrayEquals(new String[]{"Петя Сидоров", "Ростов"}, data.get(1));
                 }
             }
         }
+        assertTrue(foundCsv, "CSV-файл не найден в архиве");
     }
 }
+
 
 
